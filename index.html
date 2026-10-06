@@ -1,0 +1,316 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Catálogo de productos"
+    >
+
+    <title>Mi Tienda</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ==========================================
+         ENCABEZADO
+    =========================================== -->
+
+    <header class="header">
+
+        <div class="header-container">
+
+            <a href="#" class="logo" id="logo">
+                Mi Tienda
+            </a>
+
+            <button
+                class="menu-button"
+                id="menuButton"
+                aria-label="Abrir menú"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================================
+         CONTENIDO PRINCIPAL
+    =========================================== -->
+
+    <main>
+
+        <!-- HERO -->
+
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <p class="hero-label">
+                    CATÁLOGO
+                </p>
+
+                <h1>
+                    Descubre nuestros productos
+                </h1>
+
+                <p>
+                    Explora nuestro catálogo y encuentra
+                    lo que estás buscando.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ======================================
+             CATEGORÍAS
+        ======================================= -->
+
+        <section class="categories-section">
+
+            <div class="section-container">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Categorías
+                    </h2>
+
+                </div>
+
+                <div
+                    class="categories"
+                    id="categories"
+                >
+                    <!-- Se generan desde JavaScript -->
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ======================================
+             PRODUCTOS
+        ======================================= -->
+
+        <section class="products-section">
+
+            <div class="section-container">
+
+                <div class="products-header">
+
+                    <div>
+
+                        <p class="section-label">
+                            NUESTRO CATÁLOGO
+                        </p>
+
+                        <h2 id="productsTitle">
+                            Todos los productos
+                        </h2>
+
+                    </div>
+
+                    <span
+                        class="product-count"
+                        id="productCount"
+                    >
+                        0 productos
+                    </span>
+
+                </div>
+
+
+                <!-- LOADING -->
+
+                <div
+                    class="loading"
+                    id="loading"
+                >
+
+                    <div class="spinner"></div>
+
+                    <p>
+                        Cargando productos...
+                    </p>
+
+                </div>
+
+
+                <!-- ERROR -->
+
+                <div
+                    class="error-message hidden"
+                    id="errorMessage"
+                >
+
+                    <h3>
+                        No se pudieron cargar los productos
+                    </h3>
+
+                    <p id="errorText">
+                        Ocurrió un problema al conectar con el catálogo.
+                    </p>
+
+                    <button
+                        id="retryButton"
+                        class="button"
+                    >
+                        Intentar nuevamente
+                    </button>
+
+                </div>
+
+
+                <!-- PRODUCTOS -->
+
+                <div
+                    class="products-grid"
+                    id="productsGrid"
+                >
+                    <!-- Se generan desde JavaScript -->
+                </div>
+
+
+                <!-- SIN PRODUCTOS -->
+
+                <div
+                    class="empty-message hidden"
+                    id="emptyMessage"
+                >
+
+                    <div class="empty-icon">
+                        🔎
+                    </div>
+
+                    <h3>
+                        No encontramos productos
+                    </h3>
+
+                    <p>
+                        No hay productos disponibles
+                        en esta categoría.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         MODAL PRODUCTO
+    =========================================== -->
+
+    <div
+        class="modal hidden"
+        id="productModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-overlay"
+            id="modalOverlay"
+        ></div>
+
+        <div class="modal-content">
+
+            <button
+                class="modal-close"
+                id="modalClose"
+                aria-label="Cerrar"
+            >
+                ×
+            </button>
+
+            <div class="modal-image-container">
+
+                <img
+                    id="modalImage"
+                    src=""
+                    alt=""
+                >
+
+            </div>
+
+            <div class="modal-info">
+
+                <span
+                    class="modal-category"
+                    id="modalCategory"
+                ></span>
+
+                <h2 id="modalTitle"></h2>
+
+                <p
+                    class="modal-description"
+                    id="modalDescription"
+                ></p>
+
+                <div
+                    class="modal-price"
+                    id="modalPrice"
+                ></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         FOOTER
+    =========================================== -->
+
+    <footer class="footer">
+
+        <div class="footer-container">
+
+            <div>
+
+                <h3>
+                    Mi Tienda
+                </h3>
+
+                <p>
+                    Catálogo de productos.
+                </p>
+
+            </div>
+
+            <div class="footer-copy">
+
+                © <span id="currentYear"></span>
+                Mi Tienda
+
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
+```
