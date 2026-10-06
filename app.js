@@ -130,7 +130,7 @@ async function supabaseFetch(
 ) {
 
     const url =
-        `${SUPABASE_URL}/rest/v1/${tabla}${parametros}`;
+        `${SUPABASE_URL}/rest/v1/${tabla}${parametros}`; 
 
     const response =
         await fetch(
