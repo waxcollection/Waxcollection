@@ -7,9 +7,9 @@
 // Utiliza solamente la Publishable / Anon Key.
 // NUNCA coloques aquí la service_role key.
 
-const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_URL = "https://cufiqlngaetgyyiqxgpg.supabase.co";
 
-const SUPABASE_ANON_KEY = "TU_PUBLISHABLE_O_ANON_KEY";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZmlxbG5nYWV0Z3l5aXF4Z3BnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjkwODksImV4cCI6MjEwNjg0NTA4OX0.H1QIhVPHV5Z121nRiU0D3ScrJSFJ0jbGuqzO7AyOKxI";
 
 
 /* =========================================================
