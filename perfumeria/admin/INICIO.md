@@ -1,33 +1,48 @@
-# Inicio del administrador Streamlit
+# Despliegue seguro del administrador (Supabase Auth)
 
-## 1. Base de datos
-El esquema principal ya está creado. En Supabase → SQL Editor ejecuta `perfumeria/database/001_admin_stock_functions.sql` **una vez** para habilitar movimientos seguros de inventario.
+## 1. Ejecutar migraciones en orden
+En **Supabase -> SQL Editor** ejecuta:
+1. `perfumeria/database/001_admin_stock_functions.sql` (si no lo ejecutaste previamente).
+2. `perfumeria/database/002_supabase_auth_admin.sql`.
 
-## 2. Storage
-En Supabase → Storage crea el bucket **perfumes** y márcalo como **Public** únicamente para lectura pública de imágenes. No publiques la clave `service_role`; las subidas las realiza exclusivamente Streamlit. No crees políticas públicas de escritura.
+La migración 002 crea `admin_usuarios`, agrega políticas RLS para administradores, autoriza operaciones autenticadas y restringe subidas a Storage.
 
-## 3. Secrets locales
-En `perfumeria/admin/` crea `.streamlit/secrets.toml` a partir de `.streamlit/secrets.toml.example`. Introduce la URL del proyecto, la clave `service_role` y una contraseña administrativa robusta. **No subas el archivo real a GitHub.**
+## 2. Dar acceso a tu primer administrador
+En **Supabase -> Authentication -> Users -> Add user** crea una cuenta con tu correo y una contraseña robusta. Confirma el correo según la configuración del proyecto. Copia el **User UID** (UUID), NO el correo.
 
-## 4. Ejecutar en Windows PowerShell
-```powershell
-cd perfumeria/admin
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-streamlit run app.py
+En SQL Editor ejecuta, sustituyendo el UUID:
+```sql
+INSERT INTO public.admin_usuarios (user_id)
+VALUES ('AQUI_EL_UUID_DEL_USUARIO')
+ON CONFLICT (user_id) DO UPDATE SET activo = true;
 ```
-Puedes usar `python -m streamlit run app.py` si el comando no aparece.
+Para revocar el acceso más adelante, cambia `activo` a `false`.
+Si solo habrá administradores, desactiva registros públicos en **Authentication -> Providers -> Email** (opción de permitir nuevos usuarios).
 
-## 5. Uso inicial
-1. Registrar marcas.
-2. Registrar perfumes.
-3. Registrar presentaciones de 2 ml, 5 ml y botellas comerciales.
-4. Cargar fotografías optimizadas a WebP (máximo 800 px).
-5. Añadir stock de botellas; abrir manualmente una botella para habilitar los ml de decants.
+## 3. Configurar Storage
+Crea el bucket `perfumes` en **Supabase -> Storage**. Puedes hacerlo público para lectura de imágenes; la migración 002 restringe las escrituras a administradores autenticados. No habilites políticas de subida pública.
 
-## Importante
-- Esta primera versión no incluye pedidos, notas/acordes/ocasiones ni el frontend público.
-- Mantén Streamlit accesible **solo localmente o tras VPN**. La contraseña interna es defensa adicional, no sustituto de un despliegue seguro.
-- Los cambios manuales de inventario deben pasar por las funciones SQL; no edites cantidades directamente.
-- El texto del error de Supabase puede incluir información técnica. No compartas capturas con credenciales.
+## 4. Streamlit Community Cloud
+- Repositorio: `waxcollection/Waxcollection`
+- Rama: `desarrollo-perfumeria`
+- Archivo principal: `perfumeria/admin/app.py`
+- Secrets:
+```toml
+SUPABASE_URL = "https://TU-PROYECTO.supabase.co"
+SUPABASE_ANON_KEY = "TU_CLAVE_PUBLICA_ANON"
+STORAGE_BUCKET = "perfumes"
+```
+Usa la clave `anon` (o publishable compatible), **NO** `service_role`. El administrador inicia sesión con su correo y contraseña creados en Supabase Auth.
+
+## 5. Probar
+1. Iniciar sesión con un usuario que NO figure en `admin_usuarios`: acceso denegado.
+2. Iniciar sesión con el administrador: panel accesible.
+3. Registrar una marca, un perfume y una presentación.
+4. Subir imagen WebP, registrar entrada de botellas y abrir una botella.
+
+## Seguridad
+- La app no guarda contraseñas en tablas ni en GitHub.
+- La clave anon es pública y está limitada por RLS; los permisos se determinan por `auth.uid()`.
+- La lista de administradores no puede editarse mediante el frontend.
+- El panel todavía requiere pruebas funcionales y una revisión adicional de permisos de escritura en inventario antes de manejar ventas reales.
+- No compartas aquí contraseñas, JWT ni claves privadas.
