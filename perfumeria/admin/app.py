@@ -16,25 +16,9 @@ def slugify(value):
     return re.sub(r"[^a-z0-9]+", "-", plain.lower()).strip("-")
 
 
-def authentication():
-    if "ADMIN_PASSWORD" not in st.secrets:
-        st.error("Configura ADMIN_PASSWORD en .streamlit/secrets.toml")
-        st.stop()
-    expected = hashlib.sha256(st.secrets["ADMIN_PASSWORD"].encode()).digest()
-    if not st.session_state.get("admin_ok", False):
-        with st.form("login"):
-            password = st.text_input("Contraseña administrativa", type="password")
-            submit = st.form_submit_button("Ingresar")
-        if submit:
-            digest = hashlib.sha256(password.encode()).digest()
-            if hmac.compare_digest(expected, digest):
-                st.session_state["admin_ok"] = True
-                st.rerun()
-            st.error("Contraseña incorrecta")
-        st.stop()
+from auth import require_admin, logout  # noqa: E402
 
-
-authentication()
+require_admin()
 from db import client, rows, insert, update, call  # noqa: E402
 from image_utils import webp_bytes  # noqa: E402
 
@@ -43,7 +27,7 @@ with st.sidebar:
     st.caption("Panel privado · Supabase")
     section = st.radio("Módulo", ["Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario"])
     if st.button("Cerrar sesión"):
-        st.session_state["admin_ok"] = False
+        logout()
         st.rerun()
 
 
@@ -130,8 +114,6 @@ elif section == "Perfumes":
                 "slug": chosen["slug"] if chosen else slugify(name) + "-" + uuid4().hex[:6],
             }
             if chosen:
-                values["updated_at"] = "now()" if False else None
-                values.pop("updated_at")
             run(lambda: update("perfumes", chosen["id"], values) if chosen else insert("perfumes", values))
 
 elif section == "Presentaciones":
