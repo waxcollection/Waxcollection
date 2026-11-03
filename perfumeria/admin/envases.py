@@ -45,4 +45,17 @@ def show_empty_vials():
         except Exception as exc:
             st.error(f"No fue posible registrar el movimiento: {exc}")
 
+    st.markdown("#### Últimos movimientos de envases")
+    try:
+        moves = (client().table("envases_decants_movimientos")
+                 .select("ml,delta_unidades,motivo,created_at")
+                 .order("created_at", desc=True).limit(30).execute().data or [])
+        st.dataframe([
+            {"Fecha": r.get("created_at"), "Tamaño (ml)": r.get("ml"),
+             "Variación": r.get("delta_unidades"), "Motivo": r.get("motivo")}
+            for r in moves
+        ], use_container_width=True, hide_index=True)
+    except Exception as exc:
+        st.warning(f"No se pudo consultar el historial de envases: {exc}")
+
     st.caption("El sistema solo ofrece tamaños con envases disponibles. En las compras también verifica que haya ml suficientes del perfume elegido. Los envases se descuentan al confirmar el pedido, no mientras está pendiente.")
