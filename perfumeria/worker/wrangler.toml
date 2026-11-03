@@ -1,6 +1,7 @@
 name = "waxcollection"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
+keep_vars = true
 
 # Configurar en Cloudflare Worker -> Settings -> Variables and Secrets:
 # SUPABASE_URL, SUPABASE_ANON_KEY, FRONTEND_ORIGIN
