@@ -90,6 +90,39 @@ REVOKE ALL ON FUNCTION public.admin_ajustar_decants(bigint,integer,text)
 GRANT EXECUTE ON FUNCTION public.admin_ajustar_decants(bigint,integer,text)
  TO authenticated;
 
+
+-- No permitir que ajustes manuales reduzcan los ml totales por debajo de los
+-- que están físicamente envasados en decants preparados.
+CREATE OR REPLACE FUNCTION public.admin_ajustar_ml(
+ p_perfume_id bigint,p_delta numeric,p_motivo text)
+RETURNS void LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $
+DECLARE v_id bigint; v_total numeric; v_preparados numeric;
+BEGIN
+ IF p_delta IS NULL OR p_delta=0 OR p_motivo IS NULL
+   OR nullif(btrim(p_motivo),'') IS NULL THEN
+   RAISE EXCEPTION 'Ajuste inválido o sin motivo';
+ END IF;
+ INSERT INTO public.inventario(perfume_id,ml_abiertos)
+ VALUES(p_perfume_id,0) ON CONFLICT (perfume_id) DO NOTHING;
+ SELECT id,ml_abiertos INTO v_id,v_total
+ FROM public.inventario WHERE perfume_id=p_perfume_id FOR UPDATE;
+ SELECT coalesce(sum(d.unidades*p.ml),0) INTO v_preparados
+ FROM public.inventario_decants d
+ JOIN public.presentaciones p ON p.id=d.presentacion_id
+ WHERE p.perfume_id=p_perfume_id AND p.tipo='decant';
+ IF v_total+p_delta < v_preparados THEN
+   RAISE EXCEPTION 'El ajuste dejaría menos mililitros que los ya preparados (%)',v_preparados;
+ END IF;
+ UPDATE public.inventario
+ SET ml_abiertos=ml_abiertos+p_delta,updated_at=now()
+ WHERE id=v_id AND ml_abiertos+p_delta>=0;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Mililitros insuficientes'; END IF;
+ INSERT INTO public.inventario_movimientos(inventario_id,tipo,delta_ml,observacion)
+ VALUES(v_id,'ajuste',p_delta,p_motivo);
+END $;
+REVOKE ALL ON FUNCTION public.admin_ajustar_ml(bigint,numeric,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.admin_ajustar_ml(bigint,numeric,text) TO authenticated;
+
 CREATE OR REPLACE FUNCTION public.admin_sincronizar_stock_pedido(p_pedido_id bigint)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$
