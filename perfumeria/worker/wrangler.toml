@@ -1,0 +1,7 @@
+name = "perfumeria-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Configurar en Cloudflare Worker -> Settings -> Variables and Secrets:
+# SUPABASE_URL, SUPABASE_ANON_KEY, FRONTEND_ORIGIN
+# FRONTEND_ORIGIN ejemplo: https://perfumeria.pages.dev (sin barra final)
