@@ -45,6 +45,8 @@ BEGIN
  src := replace(src,'       SET cantidad=excluded.cantidad;',
   '       SET cantidad=excluded.cantidad,envases_globales_aplicados=excluded.envases_globales_aplicados;');
  IF position('v_global_delta integer;' in src)=0
+    OR position('coalesce(a.envases_globales_aplicados,0)' in src)=0
+    OR position('v_global_delta:=CASE' in src)=0
     OR position('envases_globales_aplicados=excluded.envases_globales_aplicados;' in src)=0
     OR position('unidades=unidades-v_delta' in src)>0
  THEN RAISE EXCEPTION 'La función de inventario no coincide con la versión prevista; no aplicar'; END IF;
