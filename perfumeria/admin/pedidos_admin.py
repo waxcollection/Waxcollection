@@ -105,12 +105,14 @@ def show_orders(perfumes, variants):
     if current_state not in state_options:
         state_options.insert(0, current_state)
 
+    # Fuera del formulario: activar la edición debe recalcular los controles inmediatamente.
+    modify_lines = st.checkbox("Editar productos y cantidades", value=False, disabled=not active, key=f"edit_lines_{order_id}")
+
     with st.form(f"admin_order_form_{order_id}"):
         desired = st.selectbox("Nuevo estado", state_options,
             index=state_options.index(current_state),
             format_func=lambda x: STATES.get(x, x),
             disabled=not active)
-        modify_lines = st.checkbox("Editar productos y cantidades", value=False, disabled=not active)
         selected_labels = st.multiselect(
             "Artículos del pedido (agrega o quita presentaciones)",
             list(available_labels), default=default_labels,
@@ -130,9 +132,13 @@ def show_orders(perfumes, variants):
             placeholder="Ej.: Cliente solicita agregar un decant de 5 ml.")
         st.caption("Editar artículos recalcula precios y descuentos vigentes. No descuenta inventario; verifica diferencias de cobro antes de guardar.")
         confirm = st.checkbox("Confirmo haber revisado los cambios y su efecto en el cobro")
-        submit = st.form_submit_button("Guardar cambios", disabled=not confirm or not active)
+        # En st.form, la casilla no provoca rerun; validar confirmación al enviar.
+        submit = st.form_submit_button("Guardar cambios", disabled=not active)
 
     if submit:
+        if not confirm:
+            st.warning("Confirma que revisaste los cambios antes de guardarlos.")
+            return
         if not note.strip():
             st.warning("Indica el motivo de la modificación.")
             return
