@@ -25,7 +25,7 @@ from image_utils import webp_bytes  # noqa: E402
 st.title("🧴 Administración de perfumería")
 with st.sidebar:
     st.caption("Panel privado · Supabase")
-    section = st.radio("Módulo", ["Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario"])
+    section = st.radio("Módulo", ["Dashboard", "Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario"])
     if st.button("Cerrar sesión"):
         logout()
         st.rerun()
@@ -54,6 +54,13 @@ variant_names = {
     f"{next((p['nombre'] for p in perfumes if p['id']==v['perfume_id']), 'Perfume')} · {v['tipo']} {v['ml']} ml (#{v['id']})": v["id"]
     for v in variants
 }
+
+
+if section == "Dashboard":
+    from dashboard import show_dashboard
+
+    show_dashboard(perfumes, brands, variants)
+    st.stop()
 
 
 if section == "Marcas":
