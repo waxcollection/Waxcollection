@@ -24,6 +24,7 @@ async function rpc(env, fn, body) {
   });
   if (!r.ok) {
     // Nunca exponer trazas SQL ni detalles de acceso.
+    console.error("Supabase RPC request failed", { function: fn, status: r.status });
     throw new Error(`Supabase RPC failed (${r.status})`);
   }
   return r.json();
@@ -46,7 +47,8 @@ export default {
       try {
         const data = await rpc(env, "tienda_catalogo", {});
         return json({ ...data, storageBase: `${env.SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/perfumes/` }, 200, { ...headers, "cache-control": "public, max-age=60" });
-      } catch {
+      } catch (err) {
+        console.error("Catalog request failed", { message: err instanceof Error ? err.message : "Unknown error" });
         return json({ error: "No se pudo cargar el catálogo" }, 503, headers);
       }
     }
