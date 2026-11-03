@@ -107,6 +107,21 @@ BEGIN
     );
   END LOOP;
 
+  -- Los decants de 2 ml y 5 ml comparten el mismo saldo abierto.
+  -- Verificar la suma solicitada por perfume, no solo cada variante.
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      SELECT v.perfume_id, sum((it->>'cantidad')::numeric * v.ml) AS ml_solicitados
+      FROM jsonb_array_elements(v_normalizado) it
+      JOIN public.presentaciones v ON v.id=(it->>'id')::bigint
+      WHERE v.tipo='decant'
+      GROUP BY v.perfume_id
+    ) d
+    LEFT JOIN public.inventario inv ON inv.perfume_id=d.perfume_id
+    WHERE d.ml_solicitados > COALESCE(inv.ml_abiertos,0)
+  ) THEN RAISE EXCEPTION 'No hay suficientes mililitros para los decants seleccionados'; END IF;
+
   INSERT INTO public.pedidos(nombre_completo,telefono_e164,total,estado)
   VALUES (btrim(p_nombre),p_telefono,v_total,'pendiente_pago')
   RETURNING id,codigo_seguimiento INTO v_pedido,v_codigo;
