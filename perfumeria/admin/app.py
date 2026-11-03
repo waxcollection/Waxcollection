@@ -218,13 +218,13 @@ elif section == "Inventario":
     perfume_id = perfume_names[label]
     opened = client().table("inventario").select("*").eq("perfume_id", perfume_id).execute().data or []
     closed = [v for v in variants if v["perfume_id"] == perfume_id and v["tipo"] == "botella"]
-    st.metric("Mililitros abiertos", str(opened[0]["ml_abiertos"] if opened else 0))
+    st.metric("Mililitros totales sin vender", str(opened[0]["ml_abiertos"] if opened else 0))
     stock_rows = client().table("inventario_botellas").select("*").execute().data or []
     stock_map = {v["presentacion_id"]: v["unidades"] for v in stock_rows}
     st.dataframe([{"presentacion_id": v["id"], "ml": v["ml"], "unidades": stock_map.get(v["id"], 0)} for v in closed],
                  use_container_width=True, hide_index=True)
     st.markdown("#### Decants preparados")
-    st.caption("Registra unidades físicamente llenas y listas para vender. Esto no descuenta mililitros del total: el sistema separa los ml envasados de los ml libres y los rebaja al confirmar la venta.")
+    st.caption("Registra unidades físicamente llenas y listas para vender (2, 5, 10 ml u otro tamaño). Preparar no rebaja los mililitros totales: se separan los ml envasados de los libres y ambos inventarios se rebajan solo al confirmar la venta.")
     decant_variants = [v for v in variants if v["perfume_id"] == perfume_id and v["tipo"] == "decant"]
     if decant_variants:
         try:
