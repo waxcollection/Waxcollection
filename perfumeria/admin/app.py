@@ -113,7 +113,6 @@ elif section == "Perfumes":
                 "familia_olfativa": family.strip(), "descripcion": description.strip(), "activo": active,
                 "slug": chosen["slug"] if chosen else slugify(name) + "-" + uuid4().hex[:6],
             }
-            if chosen:
             run(lambda: update("perfumes", chosen["id"], values) if chosen else insert("perfumes", values))
 
 elif section == "Presentaciones":
