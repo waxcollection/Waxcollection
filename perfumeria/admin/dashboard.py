@@ -148,6 +148,23 @@ def show_dashboard(perfumes, brands, variants):
         st.error(f"No se pudo consultar el inventario: {exc}")
 
     st.divider()
+    st.markdown("#### Envases vacíos (sin perfume)")
+    try:
+        empty_vials = fetch_all("envases_decants", "ml,unidades", order="ml")
+        total_vials = sum(int(r.get("unidades") or 0) for r in empty_vials)
+        st.metric("Envases vacíos disponibles", f"{total_vials:,}")
+        if empty_vials:
+            st.dataframe([{"Tamaño (ml)": float(r["ml"]),
+                           "Envases vacíos": int(r.get("unidades") or 0)}
+                          for r in empty_vials],
+                         use_container_width=True, hide_index=True)
+        else:
+            st.info("No hay envases vacíos registrados todavía.")
+        st.caption("Los envases vacíos no representan decants listos para vender y no están limitados por el inventario de mililitros.")
+    except Exception as exc:
+        st.info(f"El inventario independiente de envases estará disponible después de ejecutar la migración 008. Detalle: {exc}")
+
+    st.divider()
     st.markdown("#### Órdenes y ventas")
     try:
         orders = fetch_all("pedidos", "*")
