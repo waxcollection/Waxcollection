@@ -63,7 +63,7 @@ def show_orders(perfumes, variants):
     c.metric("Estado", STATES.get(str(order.get("estado")), str(order.get("estado"))))
     st.write(f"**Cliente:** {order.get('nombre_completo') or '—'}")
     st.write(f"**Teléfono:** {order.get('telefono_e164') or '—'}")
-    st.write(f"**Código de seguimiento:** \`{order.get('codigo_seguimiento') or '—'}\`")
+    st.write(f"**Código de seguimiento:** `{order.get('codigo_seguimiento') or '—'}`")
 
     st.markdown("#### Artículos actuales")
     st.dataframe([{
@@ -90,6 +90,9 @@ def show_orders(perfumes, variants):
     # al editar hay que elegir presentaciones activas de nuevo.
     default_labels = [label for label, vid in options.items() if vid in current_ids]
     unknown = [vid for vid in current_ids if vid not in variants_by_id or not variants_by_id[vid].get("activo")]
+
+    if str(order.get("estado")) in {"pagado", "en_preparacion", "en_transito"}:
+        st.warning("Si modificas los productos o cantidades de una orden ya cobrada, el nuevo total podría requerir un cobro adicional o una devolución. El sistema no procesa pagos ni reembolsos automáticamente.")
 
     st.markdown("#### Modificar el pedido")
     if not active:
