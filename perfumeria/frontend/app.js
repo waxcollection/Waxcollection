@@ -133,6 +133,10 @@ async function checkout(e) {
   const phone = tel.startsWith('506') && tel.length === 11 ? tel.slice(3) : tel;
   if (!/^[0-9]{8}$/.test(phone)) { result.textContent = 'Introduce un teléfono costarricense de 8 dígitos.'; return; }
   if (!cart.length) return;
+  if (!/^506[0-9]{8}$/.test(String(cfg.WHATSAPP_NUMBER || ''))) {
+    result.textContent = 'Los pedidos todavía no están habilitados. Falta configurar el número comercial.';
+    return;
+  }
   const pop = window.open('about:blank', '_blank');
   btn.disabled = true; result.textContent = 'Registrando pedido…';
   try {
