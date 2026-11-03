@@ -54,8 +54,8 @@ def show_dashboard(perfumes, brands, variants):
         opened = fetch_all("inventario", "perfume_id,ml_abiertos")
         bottles = fetch_all("inventario_botellas", "presentacion_id,unidades")
         by_ml = {r["perfume_id"]: number(r.get("ml_abiertos")) for r in opened}
-        prepared_rows = fetch_all("inventario_decants", "presentacion_id,unidades")
-        prepared_map = {r["presentacion_id"]: int(r.get("unidades") or 0) for r in prepared_rows}
+        decant_stock = fetch_all("envases_decants", "ml,unidades", order="ml")
+        global_decants = {number(r["ml"]): int(r.get("unidades") or 0) for r in decant_stock}
         by_bottles = {r["presentacion_id"]: int(r.get("unidades") or 0) for r in bottles}
         perfumes_by_id = {p["id"]: p for p in perfumes}
         brands_by_id = {b["id"]: b.get("nombre", "") for b in brands}
@@ -70,8 +70,9 @@ def show_dashboard(perfumes, brands, variants):
                 bottle_total += available
                 unit = "botellas"
             elif v["tipo"] == "decant":
-                available = prepared_map.get(v["id"], 0)
-                unit = "decants preparados"
+                ml = number(v.get("ml"))
+                available = min(global_decants.get(ml, 0), int(stock_ml // ml)) if ml > 0 else 0
+                unit = "máximo posible (stock global + ml)"
             else:
                 available = 0
                 unit = "unidades"
@@ -88,45 +89,16 @@ def show_dashboard(perfumes, brands, variants):
             })
 
         unique_ml = sum(by_ml.values(), Decimal(0))
-        packed_by_perfume = defaultdict(Decimal)
-        decants_prepared_total = 0
-        for v in variants:
-            if v["tipo"] == "decant":
-                units = prepared_map.get(v["id"], 0)
-                decants_prepared_total += units
-                packed_by_perfume[v["perfume_id"]] += number(v.get("ml")) * units
-        total_packed_ml = sum(packed_by_perfume.values(), Decimal(0))
-        free_ml = unique_ml - total_packed_ml
-        a, b, c, d = st.columns(4)
+        a, b, c = st.columns(3)
         a.metric("Botellas cerradas", f"{bottle_total:,}")
-        b.metric("Decants listos", f"{decants_prepared_total:,}")
-        c.metric("Mililitros totales", f"{unique_ml:,.2f}")
-        d.metric("Mililitros libres", f"{free_ml:,.2f}")
-        st.caption(f"Mililitros envasados en decants: {total_packed_ml:,.2f} ml. Los ml totales incluyen los decants preparados; no deben sumarse de nuevo.")
-        if free_ml < 0:
-            st.error("Los decants preparados superan los ml declarados. Revisa los movimientos de inventario.")
-        st.markdown("#### Decants listos y capacidad de preparación")
-        decant_table = []
-        for v in variants:
-            if v["tipo"] != "decant":
-                continue
-            p = perfumes_by_id.get(v["perfume_id"], {})
-            free_for_perfume = by_ml.get(v["perfume_id"], Decimal(0)) - packed_by_perfume[v["perfume_id"]]
-            ml = number(v.get("ml"))
-            decant_table.append({
-                "Marca": brands_by_id.get(p.get("marca_id"), "—"),
-                "Perfume": p.get("nombre", f"ID {v['perfume_id']}"),
-                "Presentación ID": v["id"],
-                "Tamaño (ml)": float(ml),
-                "Preparados para venta": prepared_map.get(v["id"], 0),
-                "Posibles adicionales": max(0, int(free_for_perfume // ml)) if ml > 0 else 0,
-                "Ml libres del perfume": float(free_for_perfume),
-            })
-        if decant_table:
-            st.dataframe(decant_table, use_container_width=True, hide_index=True)
-            st.caption("Los posibles adicionales de cada tamaño son alternativas sobre el mismo saldo libre; no se deben sumar entre tamaños.")
-        else:
-            st.info("Aún no hay presentaciones de decants.")
+        b.metric("Envases decant disponibles", f"{sum(global_decants.values()):,}")
+        c.metric("Mililitros de perfume disponibles", f"{unique_ml:,.2f}")
+        st.caption("Los envases de decant son un inventario GLOBAL por tamaño. Los ml pertenecen a cada perfume y no se descuentan hasta confirmar el pedido.")
+        st.markdown("#### Decants globales (solo tres tamaños)")
+        st.dataframe([
+            {"Tamaño (ml)": size, "Envases disponibles": global_decants.get(Decimal(size), 0)}
+            for size in (2, 5, 10)
+        ], use_container_width=True, hide_index=True)
 
         st.markdown("#### Existencias por presentación")
         if inventory:
@@ -148,22 +120,6 @@ def show_dashboard(perfumes, brands, variants):
         st.error(f"No se pudo consultar el inventario: {exc}")
 
     st.divider()
-    st.markdown("#### Envases vacíos (sin perfume)")
-    try:
-        empty_vials = fetch_all("envases_decants", "ml,unidades", order="ml")
-        total_vials = sum(int(r.get("unidades") or 0) for r in empty_vials)
-        st.metric("Envases vacíos disponibles", f"{total_vials:,}")
-        if empty_vials:
-            st.dataframe([{"Tamaño (ml)": float(r["ml"]),
-                           "Envases vacíos": int(r.get("unidades") or 0)}
-                          for r in empty_vials],
-                         use_container_width=True, hide_index=True)
-        else:
-            st.info("No hay envases vacíos registrados todavía.")
-        st.caption("Los envases vacíos no representan decants listos para vender y no están limitados por el inventario de mililitros.")
-    except Exception as exc:
-        st.info(f"El inventario independiente de envases estará disponible después de ejecutar la migración 008. Detalle: {exc}")
-
     st.divider()
     st.markdown("#### Órdenes y ventas")
     try:
