@@ -25,7 +25,7 @@ from image_utils import webp_bytes  # noqa: E402
 st.title("🧴 Administración de perfumería")
 with st.sidebar:
     st.caption("Panel privado · Supabase")
-    section = st.radio("Módulo", ["Dashboard", "Pedidos", "Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario"])
+    section = st.radio("Módulo", ["Dashboard", "Pedidos", "Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario", "Envases vacíos"])
     if st.button("Cerrar sesión"):
         logout()
         st.rerun()
@@ -67,6 +67,13 @@ if section == "Pedidos":
     from pedidos_admin import show_orders
 
     show_orders(perfumes, variants)
+    st.stop()
+
+
+if section == "Envases vacíos":
+    from envases import show_empty_vials
+
+    show_empty_vials()
     st.stop()
 
 
