@@ -95,7 +95,7 @@ GRANT EXECUTE ON FUNCTION public.admin_ajustar_decants(bigint,integer,text)
 -- que están físicamente envasados en decants preparados.
 CREATE OR REPLACE FUNCTION public.admin_ajustar_ml(
  p_perfume_id bigint,p_delta numeric,p_motivo text)
-RETURNS void LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $
+RETURNS void LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $$
 DECLARE v_id bigint; v_total numeric; v_preparados numeric;
 BEGIN
  IF p_delta IS NULL OR p_delta=0 OR p_motivo IS NULL
@@ -119,7 +119,7 @@ BEGIN
  IF NOT FOUND THEN RAISE EXCEPTION 'Mililitros insuficientes'; END IF;
  INSERT INTO public.inventario_movimientos(inventario_id,tipo,delta_ml,observacion)
  VALUES(v_id,'ajuste',p_delta,p_motivo);
-END $;
+END $$;
 REVOKE ALL ON FUNCTION public.admin_ajustar_ml(bigint,numeric,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.admin_ajustar_ml(bigint,numeric,text) TO authenticated;
 
