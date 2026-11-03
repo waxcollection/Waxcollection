@@ -65,7 +65,7 @@ DECLARE
   v_num int := 0; v_normalizado jsonb := '[]'::jsonb;
 BEGIN
   IF p_nombre IS NULL OR length(btrim(p_nombre)) NOT BETWEEN 2 AND 120
-     OR p_telefono IS NULL OR p_telefono !~ '^[+]506[0-9]{8}
+     OR p_telefono IS NULL OR p_telefono !~ '^[+]506[0-9]{8}$'
      OR p_items IS NULL OR jsonb_typeof(p_items) <> 'array'
      OR jsonb_array_length(p_items) NOT BETWEEN 1 AND 20
   THEN RAISE EXCEPTION 'Datos de pedido inválidos'; END IF;
