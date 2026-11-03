@@ -1,55 +1,48 @@
-"""Inventario de envases de decant vacíos, independiente del saldo de perfume."""
-from decimal import Decimal
-
+"""Inventario GLOBAL de frascos de decant vacíos (2/5/10 ml), independiente del perfume."""
 import streamlit as st
 from db import client, call
 
+SIZES = (2, 5, 10)
+
 
 def show_empty_vials():
-    st.subheader("🧪 Envases de decants")
-    st.info("Aquí registras envases VACÍOS de 2, 5, 10 ml u otros tamaños. Puedes comprar y almacenar cualquier cantidad sin tener perfume disponible. Estos envases NO cuentan como decants llenos listos para vender.")
+    st.subheader("🧪 Inventario global de decants")
+    st.info("Una sola cantidad de envases vacíos por tamaño para TODOS los perfumes. No necesitas registrar stock de decants por perfume. Los ml se comprueban en cada perfume al comprar y se rebajan junto con el envase cuando confirmas la venta.")
+
     try:
         stock = client().table("envases_decants").select("ml,unidades").order("ml").execute().data or []
     except Exception as exc:
-        st.error(f"No se pudo consultar envases. Ejecuta primero la migración 008: {exc}")
+        st.error(f"No se pudo consultar el inventario global. Ejecuta primero la migración 009: {exc}")
         return
 
-    total = sum(int(r.get("unidades") or 0) for r in stock)
-    st.metric("Total de envases vacíos", f"{total:,}")
-    if stock:
-        st.dataframe([
-            {"Tamaño (ml)": float(r["ml"]), "Envases vacíos": int(r["unidades"])}
-            for r in stock
-        ], use_container_width=True, hide_index=True)
-    else:
-        st.caption("Aún no has registrado envases vacíos.")
+    by_size = {int(float(r["ml"])): int(r["unidades"]) for r in stock if float(r["ml"]) in SIZES}
+    st.metric("Frascos disponibles (todos los tamaños)", f"{sum(by_size.values()):,}")
+    st.dataframe(
+        [{"Tamaño (ml)": size, "Frascos disponibles": by_size.get(size, 0)} for size in SIZES],
+        use_container_width=True, hide_index=True,
+    )
 
-    known_sizes = sorted(set([Decimal("2"), Decimal("5"), Decimal("10")] +
-                             [Decimal(str(r["ml"])) for r in stock]))
-    with st.form("ajustar_envases_vacios"):
-        choice = st.selectbox("Tamaño habitual", ["Personalizado"] +
-                              [f"{s:g} ml" for s in known_sizes])
-        custom_ml = st.number_input("Tamaño personalizado (ml), solo si seleccionaste Personalizado",
-                                    min_value=0.01, max_value=1000.0, value=10.0,
-                                    step=1.0)
-        delta = st.number_input("Variación de envases vacíos (+ compra / - salida)",
+    with st.form("ajustar_decants_globales"):
+        size = st.selectbox("Tamaño de decant", SIZES, format_func=lambda n: f"{n} ml")
+        delta = st.number_input("Variación de envases (+ entrada / - retiro)",
                                 min_value=-100000, max_value=100000, value=0, step=1)
-        reason = st.text_input("Motivo", value="Compra de envases vacíos")
+        reason = st.text_input("Motivo", value="Compra de frascos para decants")
         submitted = st.form_submit_button("Registrar movimiento")
 
     if submitted:
         if not delta:
             st.warning("Indica una cantidad distinta de cero.")
             return
+        if not reason.strip():
+            st.warning("Indica el motivo del movimiento.")
+            return
         try:
-            size = Decimal(str(custom_ml)) if choice == "Personalizado" else Decimal(choice.replace(" ml", ""))
             call("admin_ajustar_envases_decants", {
-                "p_ml": float(size), "p_delta": int(delta),
-                "p_motivo": reason.strip(),
+                "p_ml": size, "p_delta": int(delta), "p_motivo": reason.strip(),
             })
-            st.success("Inventario de envases actualizado.")
+            st.success("Inventario global de decants actualizado.")
             st.rerun()
         except Exception as exc:
-            st.error(f"No fue posible registrar los envases: {exc}")
+            st.error(f"No fue posible registrar el movimiento: {exc}")
 
-    st.caption("Por ahora, llenar un decant requiere dos movimientos explícitos: retirar un envase vacío aquí y registrar el decant lleno en Inventario. No se realiza una transferencia automática entre ambos.")
+    st.caption("El sistema solo ofrece tamaños con envases disponibles. En las compras también verifica que haya ml suficientes del perfume elegido. Los envases se descuentan al confirmar el pedido, no mientras está pendiente.")
