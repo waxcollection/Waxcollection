@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#fcfaf7">
+  <meta name="description" content="Perfumes originales y decants. Descubre nuestra selección y haz tu pedido por WhatsApp.">
+  <title>Perfumería | Catálogo</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./config.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="Inicio">✦ <span id="brand-name">PERFUMERÍA</span></a>
+    <nav aria-label="Navegación principal">
+      <a href="#perfumes">Perfumes</a>
+      <a href="#seguimiento">Seguir pedido</a>
+      <button type="button" id="cart-toggle" class="outline">Carrito <span id="cart-count">0</span></button>
+    </nav>
+  </header>
+  <main id="inicio">
+    <section class="hero">
+      <p class="eyebrow">Descubre tu próxima fragancia</p>
+      <h1>Un aroma para cada momento.</h1>
+      <p>Explora perfumes y decants. Elige tu presentación y finaliza tu pedido por WhatsApp.</p>
+      <a class="button" href="#perfumes">Ver perfumes</a>
+    </section>
+    <section id="perfumes" class="content">
+      <div class="section-heading"><div><p class="eyebrow">Nuestro catálogo</p><h2>Perfumes</h2></div><span id="result-count" class="muted"></span></div>
+      <div class="filters">
+        <label>Buscar <input id="search" placeholder="Nombre o fragancia…" autocomplete="off"></label>
+        <label>Marca <select id="brand-filter"><option value="">Todas</option></select></label>
+        <label>Género <select id="gender-filter"><option value="">Todos</option><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="sin_distincion">Sin distinción</option></select></label>
+        <label>Ocasión <select id="occasion-filter"><option value="">Todas</option></select></label>
+        <label class="checkbox"><input id="sale-filter" type="checkbox"> Solo ofertas</label>
+      </div>
+      <div id="status" class="muted" role="status">Cargando catálogo…</div>
+      <div id="products" class="product-grid"></div>
+    </section>
+    <section id="seguimiento" class="content track">
+      <p class="eyebrow">¿Ya hiciste tu pedido?</p>
+      <h2>Seguimiento</h2>
+      <p class="muted">Introduce el código de seguimiento y los últimos 4 dígitos de tu teléfono.</p>
+      <form id="track-form" class="track-form">
+        <label>Código de seguimiento <input name="codigo" maxlength="24" minlength="24" required autocomplete="off" placeholder="Ej. 6F2A…"></label>
+        <label>Últimos 4 dígitos <input name="ultimos4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required placeholder="1234"></label>
+        <button type="submit">Consultar estado</button>
+      </form>
+      <div id="track-result" role="status"></div>
+    </section>
+  </main>
+  <footer><span>© <span id="footer-year"></span> <span id="footer-brand">Perfumería</span></span><span>Pedidos coordinados por WhatsApp</span></footer>
+
+  <dialog id="detail-dialog">
+    <button type="button" class="close" data-close="detail-dialog" aria-label="Cerrar">×</button>
+    <div id="detail-content"></div>
+  </dialog>
+  <dialog id="cart-dialog">
+    <button type="button" class="close" data-close="cart-dialog" aria-label="Cerrar">×</button>
+    <h2>Tu carrito</h2>
+    <div id="cart-items"></div>
+    <p class="total">Total <strong id="cart-total">₡0</strong></p>
+    <form id="checkout-form">
+      <label>Nombre completo <input name="nombre" minlength="2" maxlength="120" required autocomplete="name"></label>
+      <label>Teléfono de Costa Rica <input name="telefono" inputmode="tel" maxlength="18" placeholder="8888-1234" required autocomplete="tel"></label>
+      <p class="small muted">El pedido se registra primero. Luego deberás enviar el mensaje en WhatsApp para avisarnos.</p>
+      <button type="submit" id="checkout-btn">Generar pedido y abrir WhatsApp</button>
+    </form>
+    <div id="checkout-result" role="status"></div>
+  </dialog>
+</body>
+</html>
