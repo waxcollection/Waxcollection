@@ -94,7 +94,7 @@ def show_orders(perfumes, variants):
     if str(order.get("estado")) in {"pagado", "en_preparacion", "en_transito"}:
         st.warning("Si modificas los productos o cantidades de una orden ya cobrada, el nuevo total podría requerir un cobro adicional o una devolución. El sistema no procesa pagos ni reembolsos automáticamente.")
 
-    st.info("El inventario se rebaja una sola vez cuando la orden pasa de pendiente a pagado, preparación, tránsito o entregado. Saltar directamente a entregado también rebaja. Cancelar una orden ya descontada NO repone existencias automáticamente.")
+    st.info("Cuando confirmas un pedido (pagado, en preparación, en tránsito o entregado), se descuentan una sola vez los ml del perfume y los envases de decant del inventario global de 2, 5 o 10 ml. Saltar directamente a entregado también rebaja. Cancelar un pedido ya descontado NO repone existencias automáticamente.")
 
     st.markdown("#### Modificar el pedido")
     if not active:
@@ -157,7 +157,7 @@ def show_orders(perfumes, variants):
             st.success(f"Pedido #{order_id} actualizado. Total: ₡{amount(result.get('total')):,.0f}")
             st.rerun()
         except Exception as exc:
-            st.error(f"No fue posible guardar. Verifica que hayas ejecutado 004_admin_edit_orders.sql en Supabase: {exc}")
+            st.error(f"No fue posible guardar. Comprueba el inventario y que hayas ejecutado las migraciones 004, 006 y 009 en Supabase: {exc}")
 
     st.markdown("#### Historial de cambios")
     if history:
