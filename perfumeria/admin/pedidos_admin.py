@@ -94,6 +94,8 @@ def show_orders(perfumes, variants):
     if str(order.get("estado")) in {"pagado", "en_preparacion", "en_transito"}:
         st.warning("Si modificas los productos o cantidades de una orden ya cobrada, el nuevo total podría requerir un cobro adicional o una devolución. El sistema no procesa pagos ni reembolsos automáticamente.")
 
+    st.info("El inventario se rebaja una sola vez cuando la orden pasa de pendiente a pagado, preparación, tránsito o entregado. Saltar directamente a entregado también rebaja. Cancelar una orden ya descontada NO repone existencias automáticamente.")
+
     st.markdown("#### Modificar el pedido")
     if not active:
         st.warning("El pedido está cerrado (cancelado, abandonado o entregado). No se pueden editar sus artículos ni reabrirlo automáticamente.")
@@ -130,7 +132,7 @@ def show_orders(perfumes, variants):
             new_lines.append({"presentacion_id": vid, "cantidad": int(qty)})
         note = st.text_area("Motivo u observación del cambio", max_chars=500,
             placeholder="Ej.: Cliente solicita agregar un decant de 5 ml.")
-        st.caption("Editar artículos recalcula precios y descuentos vigentes. No descuenta inventario; verifica diferencias de cobro antes de guardar.")
+        st.caption("Editar artículos recalcula precios y descuentos vigentes. Si el pedido está activo (no pendiente/cancelado/abandonado), el sistema aplica únicamente la diferencia de inventario. Verifica diferencias de cobro antes de guardar.")
         confirm = st.checkbox("Confirmo haber revisado los cambios y su efecto en el cobro")
         # En st.form, la casilla no provoca rerun; validar confirmación al enviar.
         submit = st.form_submit_button("Guardar cambios", disabled=not active)
