@@ -25,7 +25,7 @@ from image_utils import webp_bytes  # noqa: E402
 st.title("🧴 Administración de perfumería")
 with st.sidebar:
     st.caption("Panel privado · Supabase")
-    section = st.radio("Módulo", ["Dashboard", "Pedidos", "Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario", "Envases vacíos"])
+    section = st.radio("Módulo", ["Dashboard", "Pedidos", "Marcas", "Perfumes", "Presentaciones", "Fotografías", "Inventario", "Decants (envases)"])
     if st.button("Cerrar sesión"):
         logout()
         st.rerun()
@@ -70,7 +70,7 @@ if section == "Pedidos":
     st.stop()
 
 
-if section == "Envases vacíos":
+if section == "Decants (envases)":
     from envases import show_empty_vials
 
     show_empty_vials()
@@ -154,13 +154,15 @@ elif section == "Presentaciones":
             index=next((i for i, pid in enumerate(perfume_names.values()) if chosen and pid == chosen["perfume_id"]), 0))
         kinds = ["botella", "decant"]
         kind = st.selectbox("Tipo", kinds, index=kinds.index(chosen["tipo"]) if chosen else 0)
-        ml = st.number_input("Mililitros (decants habituales: 2, 5 y 10)", min_value=0.01, step=1.0, value=float(chosen["ml"]) if chosen else 5.0)
+        ml = st.number_input("Mililitros (decants disponibles: 2, 5 y 10)", min_value=0.01, step=1.0, value=float(chosen["ml"]) if chosen else 5.0)
         price = st.number_input("Precio en colones", min_value=0.0, step=100.0, value=float(chosen["precio"]) if chosen else 0.0)
         sku = st.text_input("SKU (opcional)", chosen["sku"] or "" if chosen else "")
         active = st.checkbox("Activa", value=chosen["activo"] if chosen else True)
         save = st.form_submit_button("Guardar presentación")
     if save:
-        if ml <= 0:
+        if kind == "decant" and ml not in (2.0, 5.0, 10.0):
+            st.warning("Los decants disponibles tienen tamaños de 2, 5 o 10 ml.")
+        elif ml <= 0:
             st.warning("El tamaño debe ser mayor que 0 ml.")
         else:
             values = {"perfume_id": perfume_names[label], "tipo": kind, "ml": ml,
@@ -230,43 +232,7 @@ elif section == "Inventario":
     stock_map = {v["presentacion_id"]: v["unidades"] for v in stock_rows}
     st.dataframe([{"presentacion_id": v["id"], "ml": v["ml"], "unidades": stock_map.get(v["id"], 0)} for v in closed],
                  use_container_width=True, hide_index=True)
-    st.markdown("#### Decants preparados")
-    st.caption("Registra unidades físicamente llenas y listas para vender (2, 5, 10 ml u otro tamaño). Preparar no rebaja los mililitros totales: se separan los ml envasados de los libres y ambos inventarios se rebajan solo al confirmar la venta.")
-    decant_variants = [v for v in variants if v["perfume_id"] == perfume_id and v["tipo"] == "decant"]
-    if decant_variants:
-        try:
-            prepared_rows = client().table("inventario_decants").select("presentacion_id,unidades").execute().data or []
-            prepared_map = {r["presentacion_id"]: int(r["unidades"]) for r in prepared_rows}
-            prepared_ml = sum(prepared_map.get(v["id"], 0) * float(v["ml"]) for v in decant_variants)
-            total_ml = float(opened[0]["ml_abiertos"]) if opened else 0.0
-            i1, i2 = st.columns(2)
-            i1.metric("Mililitros ya envasados", f"{prepared_ml:,.2f} ml")
-            i2.metric("Mililitros libres para preparar", f"{total_ml - prepared_ml:,.2f} ml")
-            st.dataframe([{"Presentación ID": v["id"], "Tamaño (ml)": v["ml"],
-                           "Decants preparados": prepared_map.get(v["id"], 0),
-                           "Mililitros envasados": prepared_map.get(v["id"], 0) * float(v["ml"])}
-                          for v in decant_variants], use_container_width=True, hide_index=True)
-            decant_options = {f"{v['ml']} ml · presentación #{v['id']}": v["id"] for v in decant_variants}
-            with st.form("adjust_decants"):
-                decant_choice = st.selectbox("Tamaño de decant", list(decant_options))
-                decant_delta = st.number_input("Unidades preparadas (+ ingreso / - retiro)",
-                                               min_value=-10000, max_value=10000,
-                                               value=0, step=1)
-                decant_reason = st.text_input("Motivo", value="Preparación de decants")
-                save_decants = st.form_submit_button("Registrar decants preparados")
-            if save_decants:
-                if not decant_delta:
-                    st.warning("Ingresa una cantidad distinta de cero.")
-                else:
-                    run(lambda: call("admin_ajustar_decants", {
-                        "p_presentacion_id": decant_options[decant_choice],
-                        "p_delta": int(decant_delta),
-                        "p_motivo": decant_reason.strip(),
-                    }))
-        except Exception as exc:
-            st.warning(f"No se pudo consultar el inventario de decants. Ejecuta la migración 007 en Supabase: {exc}")
-    else:
-        st.info("Crea presentaciones de tipo decant (2, 5 o 10 ml) en el módulo Presentaciones.")
+    st.caption("Los decants de 2, 5 y 10 ml se administran globalmente en «Decants (envases)». Aquí solo administras los mililitros disponibles de este perfume.")
 
     with st.form("adjust_ml"):
         ml_delta = st.number_input("Ajuste de ml abiertos (+ entrada / - merma)", value=0.0, step=1.0)
